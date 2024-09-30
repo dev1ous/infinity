@@ -63,8 +63,10 @@ class OptimumEmbedder(BaseEmbedder):
             ),  # TODO: make this env variable public
             model_class=ORTModelForFeatureExtraction,
         )
-        if not device:
+        if device == 'CPUExecutionProvider':
             self.model.use_io_binding = False
+        else:
+            self.model.use_io_binding = True
 
         self.tokenizer = AutoTokenizer.from_pretrained(
             engine_args.model_name_or_path,
