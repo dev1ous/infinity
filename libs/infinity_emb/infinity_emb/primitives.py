@@ -91,6 +91,7 @@ class InferenceEngine(EnumType):
     torch = "torch"
     ctranslate2 = "ctranslate2"
     optimum = "optimum"
+    fastembed = "fastembed
     debugengine = "debugengine"
 
     @staticmethod
