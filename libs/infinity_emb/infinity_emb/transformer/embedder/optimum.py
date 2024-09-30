@@ -37,12 +37,13 @@ class OptimumEmbedder(BaseEmbedder):
     def __init__(self, *, engine_args: EngineArgs):
         CHECK_ONNXRUNTIME.mark_required()
         provider = device_to_onnx(engine_args.device)
+        device = "cpu" in provider.lower()
 
         onnx_file = get_onnx_files(
             model_name_or_path=engine_args.model_name_or_path,
             revision=engine_args.revision,
             use_auth_token=True,
-            prefer_quantized="cpu" in provider.lower(),
+            prefer_quantized=device
         )
 
         self.pooling = (
@@ -62,7 +63,8 @@ class OptimumEmbedder(BaseEmbedder):
             ),  # TODO: make this env variable public
             model_class=ORTModelForFeatureExtraction,
         )
-        self.model.use_io_binding = False
+        if not device:
+            self.model.use_io_binding = False
 
         self.tokenizer = AutoTokenizer.from_pretrained(
             engine_args.model_name_or_path,
