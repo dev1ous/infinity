@@ -47,6 +47,7 @@ ImageClassType = EmptyImageClassType
 dataclass_args = {"kw_only": True} if sys.version_info >= (3, 10) else {}
 
 EmbeddingReturnType = npt.NDArray[Union[np.float32, np.float32]]
+SparseEmbeddingReturnType = { 'values' : npt.NDArray[np.float32], 'indices' : npt.NDArray[np.float32] }
 AudioInputType = npt.NDArray[np.float32]
 
 
