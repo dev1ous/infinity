@@ -75,6 +75,10 @@ class Fastembed(BaseEmbedder):
 
             rescored = self.model._rescore_vector(max_token_weight)
 
+            indices, values = zip(*rescored.items())
+            
+            return { 'values' : values, 'indices' : indices }
+
     def tokenize_lengths(self, sentences: List[str]) -> List[int]:
         tks = self._infinity_tokenizer.encode_batch(
             sentences,
