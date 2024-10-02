@@ -3,7 +3,7 @@ from typing import Dict, List
 import numpy as np
 from infinity_emb.args import EngineArgs
 from infinity_emb.log_handler import logger
-from infinity_emb.primitives import Device, EmbeddingReturnType, PoolingMethod
+from infinity_emb.primitives import Device, SparseEmbeddingReturnType, PoolingMethod
 from infinity_emb.transformer.abstract import BaseEmbedder
 try:
     from fastembed import SparseTextEmbedding
@@ -49,7 +49,7 @@ class Fastembed(BaseEmbedder):
     def encode_core(self, features: Dict[str, np.ndarray]) -> np.ndarray:
         model_output = self.model.model.run(None, features)
         return model_output[0]
-    def encode_post(self, embedding: np.ndarray) -> EmbeddingReturnType:
+    def encode_post(self, embedding: np.ndarray) -> SparseEmbeddingReturnType:
         token_ids_batch = self.input_ids
 
         pooled_attention = np.mean(embedding[:, :, 0], axis=1) * self.attention_mask
