@@ -4,7 +4,7 @@
 import random
 from abc import ABC, abstractmethod
 from time import perf_counter
-from typing import TYPE_CHECKING, Any, Set, Union
+from typing import TYPE_CHECKING, Any, Set, Union, Iterable
 
 from infinity_emb._optional_imports import CHECK_PIL  # , CHECK_SOUNDFILE
 from infinity_emb.primitives import (
@@ -14,6 +14,7 @@ from infinity_emb.primitives import (
     EmbeddingDtype,
     EmbeddingInner,
     EmbeddingReturnType,
+    SparseEmbeddingReturnType,
     EmbeddingSingle,
     ImageInner,
     ImageSingle,
@@ -83,7 +84,7 @@ class BaseEmbedder(BaseTransformer):  # Inherit from ABC(Abstract base class)
     @abstractmethod
     def encode_post(
         self, embedding: OUT_FEATURES, skip_quanitzation=True
-    ) -> EmbeddingReturnType:
+    ) -> Union[EmbeddingReturnType, Iterable[SparseEmbeddingReturnType]]
         """runs post encoding such as normalization"""
 
     def warmup(self, *, batch_size: int = 64, n_tokens=1) -> tuple[float, float, str]:
