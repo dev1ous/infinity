@@ -47,7 +47,7 @@ class Fastembed(BaseEmbedder):
         }
         return onnx_input
     def encode_core(self, features: Dict[str, np.ndarray]) -> np.ndarray:
-        model_output = self.model.model.run(None, features)
+        model_output = self.model.model.run(["attention_6"], features)
         return model_output[0]
     def encode_post(self, embedding: np.ndarray) -> SparseEmbeddingReturnType:
         token_ids_batch = self.input_ids
