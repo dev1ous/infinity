@@ -36,23 +36,27 @@ class Fastembed(BaseEmbedder):
         self._infinity_tokenizer = copy.deepcopy(self.model.tokenizer)
     def encode_pre(self, sentences: List[str]) -> Dict[str, np.ndarray]:
         encoded = self.model.tokenizer.encode_batch(sentences)
-        self.input_ids = np.array([e.ids for e in encoded])
-        self.attention_mask = np.array([e.attention_mask for e in encoded])
+        input_ids = np.array([e.ids for e in encoded])
+        attention_mask = np.array([e.attention_mask for e in encoded])
         onnx_input = {
-            "input_ids": np.array(self.input_ids, dtype=np.int64),
-            "attention_mask": np.array(self.attention_mask, dtype=np.int64),
+            "input_ids": np.array(input_ids, dtype=np.int64),
+            "attention_mask": np.array(attention_mask, dtype=np.int64),
             "token_type_ids": np.array(
                 [np.zeros(len(e), dtype=np.int64) for e in input_ids], dtype=np.int64
             ),
         }
         return onnx_input
-    def encode_core(self, features: Dict[str, np.ndarray]) -> np.ndarray:
+    def encode_core(self, features: Dict[str, np.ndarray]) -> OnnxOutputContext:
         model_output = self.model.model.run(["attention_6"], features)
-        return model_output[0]
-    def encode_post(self, embedding: np.ndarray) -> Iterable[SparseEmbeddingReturnType]:
-        token_ids_batch = self.input_ids
+        return OnnxOutputContext(
+            model_output=model_output[0],
+            attention_mask=onnx_input.get("attention_mask", attention_mask),
+            input_ids=onnx_input.get("input_ids", input_ids)
+        )
+    def encode_post(self, embedding: OnnxOutputContext) -> Iterable[SparseEmbeddingReturnType]:
+        token_ids_batch = embedding.input_ids
 
-        pooled_attention = np.mean(embedding[:, :, 0], axis=1) * self.attention_mask
+        pooled_attention = np.mean(embedding.model_output[:, :, 0], axis=1) * embedding.attention_mask
 
         for document_token_ids, attention_value in zip(token_ids_batch, pooled_attention):
             document_tokens_with_ids = (
