@@ -54,6 +54,8 @@ class Fastembed(BaseEmbedder):
 
         pooled_attention = np.mean(embedding[:, :, 0], axis=1) * self.attention_mask
 
+        embeddings = []
+
         for document_token_ids, attention_value in zip(token_ids_batch, pooled_attention):
             document_tokens_with_ids = (
                 (idx, self.model.invert_vocab[token_id])
@@ -76,8 +78,10 @@ class Fastembed(BaseEmbedder):
             rescored = self.model._rescore_vector(max_token_weight)
 
             indices, values = zip(*rescored.items())
+
+            embeddings.append({ 'values' : values, 'indices' : indices })
             
-            return { 'values' : values, 'indices' : indices }
+        return embeddings
 
     def tokenize_lengths(self, sentences: List[str]) -> List[int]:
         tks = self._infinity_tokenizer.encode_batch(
