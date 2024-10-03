@@ -9,7 +9,7 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
-from typing import Any, List, Sequence, Set, Union
+from typing import Any, List, Sequence, Set, Union, Iterable
 
 import numpy as np
 
@@ -545,13 +545,22 @@ class ModelWorker:
                     time.sleep(self._batch_delay)
                 embed, batch = post_batch
                 results = self._model.encode_post(embed)
-                # while-loop just for shutdown
-                while not self._shutdown.is_set():
-                    try:
-                        self._output_q.put((results, batch), timeout=0.5)
-                        break
-                    except queue.Full:
-                        continue
+
+                if isinstance(results, Iterable):
+                    for result in results:
+                        while not self._shutdown.is_set():
+                            try:
+                                self._output_q.put((result, batch), timeout=0.5)
+                                break
+                            except queue.Full:
+                                continue
+                else:
+                    while not self._shutdown.is_set():
+                        try:
+                            self._output_q.put((results, batch), timeout=0.5)
+                            break
+                        except queue.Full:
+                            continue
                 self._postprocess_queue.task_done()
         except Exception as ex:
             logger.exception(ex)
