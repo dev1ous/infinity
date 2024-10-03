@@ -1,5 +1,5 @@
 import copy
-from typing import Dict, List
+from typing import Dict, List, Iterable
 import numpy as np
 from infinity_emb.args import EngineArgs
 from infinity_emb.log_handler import logger
@@ -49,12 +49,10 @@ class Fastembed(BaseEmbedder):
     def encode_core(self, features: Dict[str, np.ndarray]) -> np.ndarray:
         model_output = self.model.model.run(["attention_6"], features)
         return model_output[0]
-    def encode_post(self, embedding: np.ndarray) -> SparseEmbeddingReturnType:
+    def encode_post(self, embedding: np.ndarray) -> Iterable[SparseEmbeddingReturnType]:
         token_ids_batch = self.input_ids
 
         pooled_attention = np.mean(embedding[:, :, 0], axis=1) * self.attention_mask
-
-        embeddings = []
 
         for document_token_ids, attention_value in zip(token_ids_batch, pooled_attention):
             document_tokens_with_ids = (
@@ -79,9 +77,7 @@ class Fastembed(BaseEmbedder):
 
             indices, values = zip(*rescored.items())
 
-            embeddings.append({ 'values' : values, 'indices' : indices })
-            
-        return embeddings
+            yield { 'values' : values, 'indices' : indices }
 
     def tokenize_lengths(self, sentences: List[str]) -> List[int]:
         tks = self._infinity_tokenizer.encode_batch(
