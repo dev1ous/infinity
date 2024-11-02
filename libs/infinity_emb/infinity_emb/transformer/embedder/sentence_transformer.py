@@ -129,7 +129,7 @@ class SentenceTransformerPatched(SentenceTransformer, BaseEmbedder):
             return_token_type_ids=False,
             return_attention_mask=False,
             return_length=False,
-            # max_length=self._infinity_tokenizer.model_max_length,
+            max_length=512,
             truncation="longest_first",
         ).encodings
         return [len(t.tokens) for t in tks]
