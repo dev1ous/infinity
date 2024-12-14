@@ -9,7 +9,7 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
-from typing import Any, List, Sequence, Set, Union, Iterable
+from typing import Any, List, Sequence, Set, Union, Iterable, Optional
 
 import numpy as np
 
@@ -122,7 +122,7 @@ class BatchHandler:
 
     async def embed(
         self, sentences: list[str]
-    ) -> tuple[list[EmbeddingReturnType], int]:
+    ) -> tuple[list[EmbeddingReturnType], Optional[int]]:
         """Schedule a sentence to be embedded. Awaits until embedded.
 
         Args:
@@ -141,10 +141,15 @@ class BatchHandler:
                 "the loaded moded cannot fullyfill `embed`."
                 f"options are {self.model_worker.capabilities}."
             )
-        input_sentences = [EmbeddingSingle(sentence=s) for s in sentences]
 
-        embeddings, usage = await self._schedule(input_sentences)
-        return embeddings, usage
+        if self.model_worker._model.device == 'cpu':
+            input_sentences = EmbeddingSingle(sentence=[0])
+            embeddings = self.model_worker._model.query_embed()
+            return embeddings
+        else:
+            input_sentences = [EmbeddingSingle(sentence=s) for s in sentences]
+            embeddings, usage = await self._schedule(input_sentences)
+            return embeddings, usage
 
     async def rerank(
         self, query: str, docs: list[str], raw_scores: bool = False
